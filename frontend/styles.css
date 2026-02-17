@@ -1,0 +1,919 @@
+/* ========================================
+   Sistema de Calificaciones - El Parche del Gato
+   Estilos CSS
+   ======================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
+:root {
+    --color-primary: #ff6600;
+    --color-primary-dark: #e55a00;
+    --color-accent: #f44336;
+    --color-success: #2ecc71;
+    --color-error: #e74c3c;
+    --color-text: #2d2d2d;
+    --color-text-light: #777777;
+    --color-background: #ffcc00;
+    --color-white: #ffffff;
+    --color-border: #e8e8e8;
+    --color-selected: #f44336;
+    --color-card: #fff8e1;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.18);
+    --border-radius: 16px;
+    --border-radius-sm: 10px;
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, var(--color-background) 0%, #ff9800 100%);
+    color: var(--color-text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 680px;
+    min-height: 100vh;
+    background: transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+@media (min-width: 681px) and (max-width: 767px) {
+    .container {
+        min-height: 95vh;
+        margin: 12px;
+    }
+}
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 100%;
+        min-height: 100vh;
+        margin: 0;
+    }
+}
+
+/* ========================================
+   Screens
+   ======================================== */
+
+.screen {
+    display: none;
+    flex-direction: column;
+    padding: 30px 28px;
+    padding-bottom: 60px;
+    min-height: 100vh;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1.5px solid rgba(255, 204, 0, 0.4);
+    backdrop-filter: blur(2px);
+}
+
+@media (min-width: 681px) and (max-width: 767px) {
+    .screen {
+        min-height: 95vh;
+        border-radius: 24px;
+        padding: 36px 40px;
+        padding-bottom: 60px;
+    }
+}
+
+@media (min-width: 768px) {
+    .screen {
+        min-height: 100vh;
+        border-radius: 0;
+        border: none;
+        padding: 10px 20px;
+        padding-bottom: 16px;
+    }
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ========================================
+   Header
+   ======================================== */
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo {
+    max-width: 110px;
+    max-height: 80px;
+    margin-bottom: 10px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+}
+
+.logo.hidden {
+    display: none;
+}
+
+header h1 {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #222;
+    margin-bottom: 2px;
+    letter-spacing: -0.5px;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.store-name {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    font-weight: 600;
+}
+
+
+/* ========================================
+   Main Content
+   ======================================== */
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+main h2 {
+    font-size: 1.25rem;
+    text-align: center;
+    margin-bottom: 8px;
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.instruction {
+    text-align: center;
+    color: var(--color-text-light);
+    margin-bottom: 28px;
+    font-size: 0.9rem;
+}
+
+/* ========================================
+   Buttons
+   ======================================== */
+
+.btn-primary,
+.btn-secondary {
+    padding: 14px 28px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.3px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #ff8533 100%);
+    color: var(--color-white);
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(255, 102, 0, 0.35);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 102, 0, 0.45);
+}
+
+.btn-primary:disabled {
+    background: #ccc;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--color-text-light);
+    border: 2px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: rgba(255, 102, 0, 0.05);
+}
+
+.btn-start {
+    margin-top: auto;
+    font-size: 1.4rem;
+    padding: 20px;
+    border-radius: 50px;
+    letter-spacing: 0.5px;
+}
+
+.button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.button-group .btn-secondary {
+    flex: 0 0 auto;
+    border-radius: 50px;
+}
+
+.button-group .btn-primary {
+    flex: 1;
+}
+
+/* ========================================
+   Input Group
+   ======================================== */
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--color-text);
+}
+
+.input-group input,
+.input-group textarea,
+.input-group select {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition);
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+}
+
+.input-group input:focus,
+.input-group textarea:focus,
+.input-group select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.15);
+}
+
+.input-group input.error {
+    border-color: var(--color-error);
+}
+
+.error-text {
+    display: block;
+    color: var(--color-error);
+    font-size: 0.85rem;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+.error-text.hidden {
+    display: none;
+}
+
+/* Input con prefijo */
+.input-with-prefix {
+    display: flex;
+    align-items: stretch;
+    border: 2px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.input-with-prefix:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.15);
+}
+
+.invoice-prefix {
+    display: none;
+    align-items: center;
+    padding: 14px;
+    background: var(--color-card);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
+    border-right: 2px solid var(--color-border);
+}
+
+.input-with-prefix input {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    padding: 14px;
+    font-size: 1.05rem;
+}
+
+.input-with-prefix input:focus {
+    border: none;
+    box-shadow: none;
+}
+
+/* ========================================
+   Category Sections (Rating)
+   ======================================== */
+
+.rating-main {
+    gap: 0;
+    margin-top: 200px;
+}
+
+.category-section {
+    padding: 6px 4px 8px;
+    border-bottom: 1px solid rgba(255, 204, 0, 0.35);
+}
+
+.category-section:last-of-type {
+    border-bottom: none;
+}
+
+.category-section h3 {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.rating-options {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+}
+
+.rating-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.rating-btn:hover {
+    transform: translateY(-2px);
+}
+
+.rating-btn.selected {
+    transform: translateY(-2px) scale(1.15);
+    filter: drop-shadow(0 3px 8px rgba(244, 67, 54, 0.35));
+}
+
+.rating-btn .rating-img {
+    width: 92px;
+    height: 92px;
+    object-fit: contain;
+    transition: var(--transition);
+}
+
+.rating-btn:hover .rating-img {
+    transform: scale(1.1);
+}
+
+.rating-btn.selected .rating-img {
+    transform: scale(1.1);
+}
+
+/* ========================================
+   Mesa Section
+   ======================================== */
+
+.mesa-section {
+    margin-top: 4px;
+    margin-bottom: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid rgba(255, 204, 0, 0.35);
+}
+
+.mesa-section label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.mesa-section .input-group {
+    margin-bottom: 4px;
+    max-width: 200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.mesa-section input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition);
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    background: rgba(255, 255, 255, 0.7);
+    text-align: center;
+}
+
+.mesa-section input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15);
+    background: var(--color-white);
+}
+
+.mesa-section input.error {
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+}
+
+.mesa-hint {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--color-text-light);
+    text-align: center;
+    margin-top: 3px;
+}
+
+.mesa-hint.error {
+    color: var(--color-error);
+    font-weight: 600;
+}
+
+/* ========================================
+   Comment Section
+   ======================================== */
+
+.comment-section {
+    margin-top: 8px;
+    margin-bottom: 2px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.comment-section label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 3px;
+    color: var(--color-text);
+    font-size: 0.78rem;
+}
+
+.comment-section textarea {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition);
+    outline: none;
+    resize: vertical;
+    font-family: 'Poppins', sans-serif;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.comment-section textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.15);
+    background: var(--color-white);
+}
+
+.char-count {
+    display: block;
+    text-align: right;
+    font-size: 0.7rem;
+    color: var(--color-text-light);
+    margin-top: 4px;
+}
+
+/* ========================================
+   Submit Button (rating screen)
+   ======================================== */
+
+#btn-submit {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    max-width: 260px;
+    margin: 4px auto 0;
+}
+
+/* ========================================
+   Loading & Status Screens
+   ======================================== */
+
+#loading-screen,
+#submitting-screen {
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   Error Screen
+   ======================================== */
+
+#error-screen {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+}
+
+#error-screen h2 {
+    color: var(--color-error);
+    margin-bottom: 12px;
+}
+
+#error-screen p {
+    color: var(--color-text-light);
+}
+
+/* ========================================
+   Thanks Screen
+   ======================================== */
+
+#thanks-screen {
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.thanks-content {
+    text-align: center;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: var(--color-white);
+    font-size: 2.8rem;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    animation: scaleIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+@keyframes scaleIn {
+    0% {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.2) rotate(5deg);
+    }
+    100% {
+        transform: scale(1) rotate(0);
+        opacity: 1;
+    }
+}
+
+.thanks-content h2 {
+    color: var(--color-success);
+    margin-bottom: 12px;
+    font-size: 1.5rem;
+}
+
+.thanks-content p {
+    color: var(--color-text-light);
+    margin-bottom: 8px;
+}
+
+.countdown {
+    font-size: 0.8rem;
+    margin-top: 24px;
+    color: var(--color-text-light);
+    opacity: 0.7;
+}
+
+/* ========================================
+   Setup/Admin Screen
+   ======================================== */
+
+#setup-screen {
+    align-items: center;
+    justify-content: center;
+}
+
+.setup-content {
+    text-align: center;
+    width: 100%;
+    max-width: 320px;
+}
+
+.setup-content h2 {
+    color: #222;
+    margin-bottom: 24px;
+    font-size: 1.4rem;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.setup-content p {
+    color: var(--color-text);
+    margin-bottom: 16px;
+}
+
+.setup-content .input-group {
+    margin-bottom: 20px;
+}
+
+.setup-content input,
+.setup-content select {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    transition: var(--transition);
+    font-family: 'Poppins', sans-serif;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.setup-content input:focus,
+.setup-content select:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.15);
+}
+
+.setup-content select {
+    text-align: left;
+    cursor: pointer;
+    background: var(--color-white);
+}
+
+.setup-hint {
+    font-size: 0.8rem;
+    color: var(--color-text-light);
+    margin-top: 16px;
+}
+
+.btn-fullscreen {
+    width: 100%;
+    margin-top: 24px;
+    padding: 12px 24px;
+    border-radius: 50px;
+}
+
+#pin-section,
+#sede-section {
+    transition: var(--transition);
+}
+
+/* ========================================
+   Footer
+   ======================================== */
+
+.app-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 16px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 0.55rem;
+    color: #555;
+}
+
+.app-footer p {
+    margin: 2px 0;
+}
+
+/* ========================================
+   Utilities
+   ======================================== */
+
+.hidden {
+    display: none !important;
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 380px) {
+    .screen {
+        padding: 18px 12px;
+        padding-bottom: 55px;
+    }
+
+    .rating-options {
+        gap: 5px;
+    }
+
+    .rating-btn .rating-img {
+        width: 46px;
+        height: 46px;
+    }
+
+    .category-section {
+        padding: 8px 2px 10px;
+    }
+
+    .category-section h3 {
+        font-size: 0.72rem;
+        margin-bottom: 6px;
+    }
+
+    header h1 {
+        font-size: 1.4rem;
+    }
+}
+
+/* ========================================
+   Tablet Portrait
+   ======================================== */
+
+@media (min-width: 768px) and (orientation: portrait) {
+    body {
+        align-items: stretch;
+        justify-content: stretch;
+    }
+
+    #rating-screen {
+        padding-top: 6px;
+        padding-bottom: 10px;
+        justify-content: center;
+    }
+
+    .category-section {
+        padding: 5px 4px 8px;
+    }
+
+    .category-section h3 {
+        margin-bottom: 3px;
+        font-size: 0.75rem;
+    }
+
+    .rating-options {
+        gap: 4px;
+    }
+
+    .rating-btn {
+        padding: 1px;
+    }
+
+    .rating-btn .rating-img {
+        width: 110px;
+        height: 110px;
+    }
+
+    .comment-section {
+        margin-top: 4px;
+        margin-bottom: 4px;
+    }
+
+    .comment-section textarea {
+        padding: 8px 10px;
+    }
+
+    #btn-submit {
+        margin-top: 4px;
+    }
+}
+
+/* ========================================
+   Tablet Landscape
+   ======================================== */
+
+@media (min-width: 768px) and (orientation: landscape) {
+    body {
+        align-items: stretch;
+        justify-content: stretch;
+    }
+
+    .container {
+        max-width: 100%;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .screen {
+        padding: 4px 14px;
+        padding-bottom: 10px;
+        min-height: 100vh;
+        height: 100vh;
+        overflow-y: auto;
+        border-radius: 0;
+        border: none;
+    }
+
+    /* Rating screen: compacto sin scroll */
+    #rating-screen {
+        padding-top: 2px;
+        padding-bottom: 8px;
+        justify-content: center;
+    }
+
+    .category-section {
+        padding: 2px 2px 4px;
+    }
+
+    .category-section h3 {
+        margin-bottom: 1px;
+        font-size: 0.7rem;
+    }
+
+    .rating-options {
+        gap: 1px;
+    }
+
+    .rating-btn {
+        padding: 0;
+    }
+
+    .rating-btn .rating-img {
+        width: 112px;
+        height: 112px;
+    }
+
+    .comment-section {
+        margin-top: 2px;
+        margin-bottom: 2px;
+    }
+
+    .comment-section textarea {
+        padding: 6px 8px;
+    }
+
+    #btn-submit {
+        margin-top: 2px;
+    }
+
+    /* Thanks centrado */
+    #thanks-screen .thanks-content {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+}
+
+/* ========================================
+   Touch Device Optimizations
+   ======================================== */
+
+@media (hover: none) {
+    .btn-primary:hover:not(:disabled) {
+        transform: none;
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.35);
+    }
+
+    .rating-btn:hover {
+        transform: none;
+    }
+
+    .rating-btn.selected {
+        transform: scale(1.15);
+    }
+}

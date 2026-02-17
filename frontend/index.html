@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Califica tu experiencia - El Parche del Gato</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Pantalla de carga -->
+        <div id="loading-screen" class="screen active">
+            <div class="spinner"></div>
+            <p>Cargando...</p>
+        </div>
+
+        <!-- Pantalla de error -->
+        <div id="error-screen" class="screen">
+            <div class="error-icon">&#9888;&#65039;</div>
+            <h2>Error de configuraci&oacute;n</h2>
+            <p id="error-message">No se pudo cargar la configuraci&oacute;n del punto de venta.</p>
+        </div>
+
+        <!-- Pantalla de setup (PIN + sede) -->
+        <div id="setup-screen" class="screen">
+            <div class="setup-content">
+                <h2>Configuraci&oacute;n de Sede</h2>
+
+                <div id="pin-section">
+                    <p>Ingrese el PIN de administrador</p>
+                    <div class="input-group">
+                        <input
+                            type="password"
+                            id="admin-pin"
+                            placeholder="****"
+                            maxlength="4"
+                            inputmode="numeric"
+                            autocomplete="off"
+                        >
+                        <span id="pin-error" class="error-text hidden">PIN incorrecto</span>
+                    </div>
+                    <button id="btn-verify-pin" class="btn-primary">Verificar</button>
+                </div>
+
+                <div id="sede-section" class="hidden">
+                    <p>Seleccione el punto de venta</p>
+                    <div class="input-group">
+                        <select id="sede-select">
+                            <option value="">Cargando sedes...</option>
+                        </select>
+                    </div>
+                    <button id="btn-save-sede" class="btn-primary" disabled>Guardar Configuraci&oacute;n</button>
+                    <p class="setup-hint">Esta configuraci&oacute;n se guardar&aacute; en este dispositivo</p>
+                </div>
+
+                <button id="btn-fullscreen" class="btn-secondary btn-fullscreen">Pantalla Completa</button>
+            </div>
+        </div>
+
+        <!-- Pantalla de bienvenida -->
+        <div id="welcome-screen" class="screen">
+            <header>
+                <img id="logo" src="assets/logo.png" alt="Logo" class="logo hidden">
+                <h1 id="brand-name">El Parche del Gato</h1>
+                <p id="store-name" class="store-name"></p>
+            </header>
+
+            <main>
+                <h2 id="welcome-title">&iquest;C&oacute;mo estuvo tu experiencia?</h2>
+                <p class="instruction">Tu opini&oacute;n nos ayuda a mejorar</p>
+                <button id="btn-start" class="btn-primary btn-start">Calificar</button>
+            </main>
+        </div>
+
+        <!-- Pantalla de factura (opcional) -->
+        <div id="invoice-screen" class="screen">
+            <header>
+                <img id="logo-invoice" src="assets/logo.png" alt="Logo" class="logo hidden">
+                <h1 id="brand-name-invoice">El Parche del Gato</h1>
+                <p id="store-name-invoice" class="store-name"></p>
+            </header>
+
+            <main>
+                <h2>Ingresa tu n&uacute;mero de factura</h2>
+                <p class="instruction">Esto es opcional, puedes omitirlo</p>
+
+                <div class="input-group">
+                    <div class="input-with-prefix">
+                        <span id="invoice-prefix" class="invoice-prefix"></span>
+                        <input
+                            type="text"
+                            id="invoice-number"
+                            placeholder="12345"
+                            autocomplete="off"
+                            inputmode="numeric"
+                        >
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="btn-skip-invoice" class="btn-secondary">Omitir</button>
+                    <button id="btn-continue-invoice" class="btn-primary">Continuar</button>
+                </div>
+            </main>
+        </div>
+
+        <!-- Pantalla de calificaci&oacute;n (4 categor&iacute;as) -->
+        <div id="rating-screen" class="screen">
+            <main class="rating-main">
+                <div class="category-section" data-category="servicio">
+                    <h3>¿Nuestro equipo hizo que te sintieras especial?</h3>
+                    <div class="rating-options">
+                        <button class="rating-btn" data-rating="1" aria-label="Muy malo">
+                            <img src="assets/rating-1.png" alt="Muy malo" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="2" aria-label="Malo">
+                            <img src="assets/rating-2.png" alt="Malo" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="3" aria-label="Regular">
+                            <img src="assets/rating-3.png" alt="Regular" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="4" aria-label="Bueno">
+                            <img src="assets/rating-4.png" alt="Bueno" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="5" aria-label="Excelente">
+                            <img src="assets/rating-5.png" alt="Excelente" class="rating-img">
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-section" data-category="comida">
+                    <h3>¿Cada plato estuvo a la altura de la experiencia?</h3>
+                    <div class="rating-options">
+                        <button class="rating-btn" data-rating="1" aria-label="Muy malo">
+                            <img src="assets/rating-1.png" alt="Muy malo" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="2" aria-label="Malo">
+                            <img src="assets/rating-2.png" alt="Malo" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="3" aria-label="Regular">
+                            <img src="assets/rating-3.png" alt="Regular" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="4" aria-label="Bueno">
+                            <img src="assets/rating-4.png" alt="Bueno" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="5" aria-label="Excelente">
+                            <img src="assets/rating-5.png" alt="Excelente" class="rating-img">
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-section" data-category="infraestructura">
+                    <h3>¿El lugar estuvo a la altura de la ocasión?</h3>
+                    <div class="rating-options">
+                        <button class="rating-btn" data-rating="1" aria-label="Muy malo">
+                            <img src="assets/rating-1.png" alt="Muy malo" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="2" aria-label="Malo">
+                            <img src="assets/rating-2.png" alt="Malo" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="3" aria-label="Regular">
+                            <img src="assets/rating-3.png" alt="Regular" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="4" aria-label="Bueno">
+                            <img src="assets/rating-4.png" alt="Bueno" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="5" aria-label="Excelente">
+                            <img src="assets/rating-5.png" alt="Excelente" class="rating-img">
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-section" data-category="musica">
+                    <h3>¿La ambientación musical fue agradable?</h3>
+                    <div class="rating-options">
+                        <button class="rating-btn" data-rating="1" aria-label="Muy malo">
+                            <img src="assets/rating-1.png" alt="Muy malo" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="2" aria-label="Malo">
+                            <img src="assets/rating-2.png" alt="Malo" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="3" aria-label="Regular">
+                            <img src="assets/rating-3.png" alt="Regular" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="4" aria-label="Bueno">
+                            <img src="assets/rating-4.png" alt="Bueno" class="rating-img">
+                        </button>
+                        <button class="rating-btn" data-rating="5" aria-label="Excelente">
+                            <img src="assets/rating-5.png" alt="Excelente" class="rating-img">
+                        </button>
+                    </div>
+                </div>
+
+                <div id="mesa-section" class="mesa-section hidden">
+                    <label for="mesa-number" id="mesa-label">N&uacute;mero de Mesa</label>
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            id="mesa-number"
+                            placeholder="Ej: 5"
+                            autocomplete="off"
+                            inputmode="numeric"
+                            maxlength="10"
+                        >
+                    </div>
+                    <span id="mesa-hint" class="mesa-hint"></span>
+                </div>
+
+                <div class="comment-section">
+                    <label for="comment">&iquest;Algo que quieras contarnos? (opcional)</label>
+                    <textarea
+                        id="comment"
+                        rows="2"
+                        placeholder="Escribe tu comentario aqu&iacute;..."
+                        maxlength="500"
+                    ></textarea>
+                    <span class="char-count"><span id="char-current">0</span>/500</span>
+                </div>
+
+                <button id="btn-submit" class="btn-primary" disabled>Enviar</button>
+            </main>
+        </div>
+
+        <!-- Pantalla de envío -->
+        <div id="submitting-screen" class="screen">
+            <div class="spinner"></div>
+            <p>Enviando tu calificaci&oacute;n...</p>
+        </div>
+
+        <!-- Pantalla de gracias -->
+        <div id="thanks-screen" class="screen">
+            <div class="thanks-content">
+                <div class="success-icon">&#10003;</div>
+                <h2>&iexcl;Gracias por tu opini&oacute;n!</h2>
+                <p>Tu calificaci&oacute;n nos ayuda a mejorar nuestro servicio.</p>
+                <p class="countdown">Esta pantalla se cerrar&aacute; en <span id="countdown">15</span> segundos...</p>
+            </div>
+        </div>
+
+        <!-- Footer (5 toques = admin) -->
+        <footer id="app-footer" class="app-footer">
+            <p>Desarrollado por <strong>CDM Help</strong> para <strong>El Parche Del Gato SAS</strong></p>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
