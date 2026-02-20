@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - El Parche del Gato</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --amarillo: #ffcc00;
+      --naranja: #ff9800;
+      --naranja-oscuro: #ff6600;
+      --blanco: #ffffff;
+      --gris: #f5f5f5;
+      --gris-texto: #555;
+      --sombra: rgba(0,0,0,0.1);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, var(--amarillo) 0%, var(--naranja) 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    /* ---- PIN SCREEN ---- */
+    #pin-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    #pin-screen .pin-card {
+      background: rgba(255,255,255,0.92);
+      border-radius: var(--radius);
+      padding: 40px 32px;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+
+    #pin-screen img.logo {
+      width: 80px;
+      margin-bottom: 12px;
+    }
+
+    #pin-screen h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--naranja-oscuro);
+      margin-bottom: 4px;
+    }
+
+    #pin-screen p {
+      font-size: 0.82rem;
+      color: var(--gris-texto);
+      margin-bottom: 24px;
+    }
+
+    #pin-input {
+      width: 100%;
+      padding: 14px;
+      font-size: 1.4rem;
+      text-align: center;
+      letter-spacing: 8px;
+      border: 2px solid rgba(255,150,0,0.4);
+      border-radius: var(--radius-sm);
+      font-family: 'Poppins', sans-serif;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    #pin-input:focus { border-color: var(--naranja-oscuro); }
+
+    #pin-error {
+      color: #e53935;
+      font-size: 0.8rem;
+      margin-bottom: 8px;
+      min-height: 18px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--naranja-oscuro), var(--naranja));
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ---- DASHBOARD ---- */
+    #dashboard-screen {
+      display: none;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    /* Header */
+    .dash-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,0.85);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      margin-bottom: 18px;
+    }
+
+    .dash-header img { width: 52px; height: 52px; object-fit: contain; }
+
+    .dash-header-text h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--naranja-oscuro);
+    }
+
+    .dash-header-text p {
+      font-size: 0.75rem;
+      color: var(--gris-texto);
+    }
+
+    .dash-header-right {
+      margin-left: auto;
+      font-size: 0.72rem;
+      color: var(--gris-texto);
+      text-align: right;
+    }
+
+    #btn-salir {
+      background: transparent;
+      border: 1.5px solid var(--naranja-oscuro);
+      color: var(--naranja-oscuro);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    /* Filtros */
+    .filtros {
+      background: rgba(255,255,255,0.85);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .filtros label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--naranja-oscuro);
+    }
+
+    .filtros select, .filtros input[type="date"] {
+      padding: 7px 12px;
+      border: 1.5px solid rgba(255,150,0,0.4);
+      border-radius: 50px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82rem;
+      outline: none;
+      background: white;
+    }
+
+    .filtros select:focus, .filtros input[type="date"]:focus {
+      border-color: var(--naranja-oscuro);
+    }
+
+    .periodo-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .periodo-btn {
+      padding: 6px 14px;
+      border-radius: 50px;
+      border: 1.5px solid rgba(255,150,0,0.4);
+      background: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .periodo-btn.active {
+      background: var(--naranja-oscuro);
+      color: white;
+      border-color: var(--naranja-oscuro);
+    }
+
+    .custom-dates {
+      display: none;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .custom-dates.visible { display: flex; }
+
+    /* Cards resumen */
+    .cards-resumen {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.9);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      text-align: center;
+    }
+
+    .card .card-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--gris-texto);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .card .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--naranja-oscuro);
+      line-height: 1;
+    }
+
+    .card .card-sub {
+      font-size: 0.7rem;
+      color: var(--gris-texto);
+      margin-top: 4px;
+    }
+
+    /* Loading */
+    #loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,200,0,0.4);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--naranja-oscuro);
+    }
+
+    /* Sección */
+    .seccion {
+      background: rgba(255,255,255,0.9);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .seccion h2 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--naranja-oscuro);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Tabla sedes */
+    .tabla-sedes {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .tabla-sedes th {
+      text-align: left;
+      padding: 8px 12px;
+      background: rgba(255,150,0,0.1);
+      color: var(--naranja-oscuro);
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    .tabla-sedes td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,150,0,0.15);
+    }
+
+    .tabla-sedes tr:last-child td { border-bottom: none; }
+
+    .tabla-sedes .sede-nombre { font-weight: 600; }
+
+    .score {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 700;
+    }
+
+    .score-bar {
+      display: inline-block;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--naranja-oscuro), var(--amarillo));
+    }
+
+    /* Gráfico tendencia */
+    .chart-container {
+      position: relative;
+      height: 260px;
+    }
+
+    /* Distribución */
+    .dist-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .dist-categoria h3 {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--naranja-oscuro);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .dist-barra {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 0.75rem;
+    }
+
+    .dist-label { width: 30px; text-align: right; font-weight: 600; color: var(--gris-texto); }
+
+    .dist-track {
+      flex: 1;
+      height: 16px;
+      background: rgba(255,150,0,0.12);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .dist-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--naranja-oscuro), var(--naranja));
+      border-radius: 8px;
+      transition: width 0.5s ease;
+    }
+
+    .dist-count { width: 28px; color: var(--gris-texto); font-size: 0.72rem; }
+
+    /* Comentarios */
+    .comentario-item {
+      border-bottom: 1px solid rgba(255,150,0,0.2);
+      padding: 12px 0;
+    }
+
+    .comentario-item:last-child { border-bottom: none; }
+
+    .comentario-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+
+    .comentario-sede {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--naranja-oscuro);
+      background: rgba(255,150,0,0.12);
+      padding: 2px 10px;
+      border-radius: 50px;
+    }
+
+    .comentario-fecha {
+      font-size: 0.7rem;
+      color: var(--gris-texto);
+    }
+
+    .comentario-mesa {
+      font-size: 0.7rem;
+      color: var(--gris-texto);
+    }
+
+    .comentario-texto {
+      font-size: 0.85rem;
+      color: #333;
+      font-style: italic;
+    }
+
+    .no-data {
+      text-align: center;
+      color: var(--gris-texto);
+      font-size: 0.85rem;
+      padding: 20px 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .cards-resumen { grid-template-columns: repeat(2, 1fr); }
+      .dist-grid { grid-template-columns: 1fr; }
+      .filtros { flex-direction: column; align-items: flex-start; }
+
+      .tabla-sedes th:nth-child(n+3),
+      .tabla-sedes td:nth-child(n+3) { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .cards-resumen { grid-template-columns: repeat(2, 1fr); }
+      .card .card-value { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-card">
+    <img src="assets/logo.png" alt="Logo" class="logo" onerror="this.style.display='none'" />
+    <h2>El Parche del Gato</h2>
+    <p>Dashboard de métricas — acceso restringido</p>
+    <input type="password" id="pin-input" maxlength="4" placeholder="· · · ·" inputmode="numeric" />
+    <div id="pin-error"></div>
+    <button class="btn" id="btn-ingresar">Ingresar</button>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">Cargando datos...</div>
+
+<!-- DASHBOARD SCREEN -->
+<div id="dashboard-screen">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <img src="assets/logo.png" alt="Logo" onerror="this.style.display='none'" />
+    <div class="dash-header-text">
+      <h1>El Parche del Gato</h1>
+      <p>Dashboard de calificaciones</p>
+    </div>
+    <div class="dash-header-right">
+      <div id="ultima-actualizacion"></div>
+      <button id="btn-salir">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <div>
+      <label for="filtro-sede">Sede</label><br/>
+      <select id="filtro-sede">
+        <option value="ALL">Todas las sedes</option>
+      </select>
+    </div>
+    <div>
+      <label>Período</label><br/>
+      <div class="periodo-btns">
+        <button class="periodo-btn" data-periodo="hoy">Hoy</button>
+        <button class="periodo-btn" data-periodo="7">7 días</button>
+        <button class="periodo-btn active" data-periodo="30">30 días</button>
+        <button class="periodo-btn" data-periodo="mes">Este mes</button>
+        <button class="periodo-btn" data-periodo="custom">Personalizado</button>
+      </div>
+    </div>
+    <div class="custom-dates" id="custom-dates">
+      <input type="date" id="fecha-inicio" />
+      <span style="color:#666">—</span>
+      <input type="date" id="fecha-fin" />
+      <button class="periodo-btn active" id="btn-aplicar-fechas">Aplicar</button>
+    </div>
+  </div>
+
+  <!-- Cards resumen -->
+  <div class="cards-resumen">
+    <div class="card">
+      <div class="card-label">Total respuestas</div>
+      <div class="card-value" id="card-total">—</div>
+      <div class="card-sub">en el período</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Promedio general</div>
+      <div class="card-value" id="card-general">—</div>
+      <div class="card-sub">sobre 5.0</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Mejor categoría</div>
+      <div class="card-value" id="card-mejor" style="font-size:1.1rem">—</div>
+      <div class="card-sub" id="card-mejor-val"></div>
+    </div>
+    <div class="card">
+      <div class="card-label">A mejorar</div>
+      <div class="card-value" id="card-peor" style="font-size:1.1rem">—</div>
+      <div class="card-sub" id="card-peor-val"></div>
+    </div>
+  </div>
+
+  <!-- Por sede -->
+  <div class="seccion" id="seccion-sedes">
+    <h2>Comparativo por sede</h2>
+    <div id="tabla-sedes-container"></div>
+  </div>
+
+  <!-- Tendencia -->
+  <div class="seccion">
+    <h2>Tendencia en el tiempo</h2>
+    <div class="chart-container">
+      <canvas id="chart-tendencia"></canvas>
+    </div>
+  </div>
+
+  <!-- Distribución -->
+  <div class="seccion">
+    <h2>Distribución de calificaciones</h2>
+    <div class="dist-grid" id="dist-grid"></div>
+  </div>
+
+  <!-- Comentarios -->
+  <div class="seccion">
+    <h2>Comentarios recientes</h2>
+    <div id="comentarios-lista"></div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var API_URL = CONFIG.API_URL;
+  var ADMIN_PIN = CONFIG.ADMIN_PIN;
+  var SESSION_KEY = 'pdg_dash_auth';
+
+  var state = {
+    sede: 'ALL',
+    fechaInicio: null,
+    fechaFin: null,
+    periodo: '30',
+    chartTendencia: null
+  };
+
+  // ---- JSONP ----
+  function fetchWithCallback(url, timeoutMs) {
+    return new Promise(function(resolve, reject) {
+      var cbName = 'dash_cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+      var timer = setTimeout(function() {
+        cleanup();
+        reject(new Error('Timeout'));
+      }, timeoutMs || 15000);
+
+      function cleanup() {
+        clearTimeout(timer);
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cbName] = function(data) {
+        cleanup();
+        resolve(data);
+      };
+
+      var script = document.createElement('script');
+      script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cbName;
+      script.onerror = function() {
+        cleanup();
+        reject(new Error('Error de conexión'));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  function apiCall(url) {
+    return fetchWithCallback(url, 15000).catch(function() {
+      return fetch(url).then(function(r) { return r.json(); });
+    });
+  }
+
+  // ---- AUTENTICACIÓN ----
+  function checkAuth() {
+    if (sessionStorage.getItem(SESSION_KEY) === 'ok') {
+      showDashboard();
+    }
+  }
+
+  document.getElementById('btn-ingresar').addEventListener('click', function() {
+    var val = document.getElementById('pin-input').value;
+    if (val === ADMIN_PIN) {
+      sessionStorage.setItem(SESSION_KEY, 'ok');
+      showDashboard();
+    } else {
+      document.getElementById('pin-error').textContent = 'PIN incorrecto';
+      document.getElementById('pin-input').value = '';
+    }
+  });
+
+  document.getElementById('pin-input').addEventListener('keydown', function(e) {
+    document.getElementById('pin-error').textContent = '';
+    if (e.key === 'Enter') document.getElementById('btn-ingresar').click();
+  });
+
+  document.getElementById('btn-salir').addEventListener('click', function() {
+    sessionStorage.removeItem(SESSION_KEY);
+    document.getElementById('pin-screen').style.display = 'flex';
+    document.getElementById('dashboard-screen').style.display = 'none';
+    document.getElementById('pin-input').value = '';
+  });
+
+  // ---- FILTROS ----
+  document.getElementById('filtro-sede').addEventListener('change', function() {
+    state.sede = this.value;
+    cargarDashboard();
+  });
+
+  document.querySelectorAll('.periodo-btn[data-periodo]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.periodo-btn[data-periodo]').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.periodo = btn.dataset.periodo;
+      var customDates = document.getElementById('custom-dates');
+      if (state.periodo === 'custom') {
+        customDates.classList.add('visible');
+      } else {
+        customDates.classList.remove('visible');
+        calcularFechas();
+        cargarDashboard();
+      }
+    });
+  });
+
+  document.getElementById('btn-aplicar-fechas').addEventListener('click', function() {
+    state.fechaInicio = document.getElementById('fecha-inicio').value;
+    state.fechaFin = document.getElementById('fecha-fin').value;
+    if (state.fechaInicio && state.fechaFin) cargarDashboard();
+  });
+
+  function calcularFechas() {
+    var hoy = new Date();
+    var fin = formatDate(hoy);
+    var inicio;
+
+    switch (state.periodo) {
+      case 'hoy':
+        inicio = fin;
+        break;
+      case '7':
+        inicio = formatDate(new Date(hoy - 6 * 86400000));
+        break;
+      case '30':
+        inicio = formatDate(new Date(hoy - 29 * 86400000));
+        break;
+      case 'mes':
+        inicio = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-01';
+        break;
+      default:
+        inicio = formatDate(new Date(hoy - 29 * 86400000));
+    }
+
+    state.fechaInicio = inicio;
+    state.fechaFin = fin;
+  }
+
+  function formatDate(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  // ---- CARGA DE SEDES ----
+  function cargarSedes() {
+    apiCall(API_URL + '?action=getSedes').then(function(data) {
+      if (data.success && data.sedes) {
+        var sel = document.getElementById('filtro-sede');
+        data.sedes.forEach(function(s) {
+          var opt = document.createElement('option');
+          opt.value = s.codigo_pv;
+          opt.textContent = s.nombre_pv;
+          sel.appendChild(opt);
+        });
+      }
+    }).catch(function() {});
+  }
+
+  // ---- CARGA PRINCIPAL ----
+  function cargarDashboard() {
+    var overlay = document.getElementById('loading-overlay');
+    overlay.style.display = 'flex';
+
+    var url = API_URL + '?action=getDashboard'
+      + '&codigo_pv=' + encodeURIComponent(state.sede)
+      + '&fecha_inicio=' + encodeURIComponent(state.fechaInicio || '')
+      + '&fecha_fin=' + encodeURIComponent(state.fechaFin || '');
+
+    apiCall(url).then(function(data) {
+      overlay.style.display = 'none';
+      if (data.success) {
+        renderResumen(data.resumen);
+        renderSedes(data.por_sede);
+        renderTendencia(data.tendencia);
+        renderDistribucion(data.distribucion, data.resumen.total);
+        renderComentarios(data.comentarios);
+        document.getElementById('ultima-actualizacion').textContent =
+          'Actualizado: ' + new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+      }
+    }).catch(function(err) {
+      overlay.style.display = 'none';
+      alert('Error al cargar datos: ' + err.message);
+    });
+  }
+
+  // ---- RENDER RESUMEN ----
+  var CATEGORIAS = { servicio: 'Servicio', comida: 'Comida', infraestructura: 'Infraestructura', musica: 'Música' };
+
+  function renderResumen(r) {
+    document.getElementById('card-total').textContent = r.total;
+    document.getElementById('card-general').textContent = r.total > 0 ? r.general.toFixed(2) : '—';
+
+    if (r.total > 0) {
+      var cats = ['servicio', 'comida', 'infraestructura', 'musica'];
+      var vals = cats.map(function(c) { return r[c]; });
+      var maxIdx = vals.indexOf(Math.max.apply(null, vals));
+      var minIdx = vals.indexOf(Math.min.apply(null, vals));
+
+      document.getElementById('card-mejor').textContent = CATEGORIAS[cats[maxIdx]];
+      document.getElementById('card-mejor-val').textContent = vals[maxIdx].toFixed(2) + ' / 5.0';
+      document.getElementById('card-peor').textContent = CATEGORIAS[cats[minIdx]];
+      document.getElementById('card-peor-val').textContent = vals[minIdx].toFixed(2) + ' / 5.0';
+    } else {
+      ['card-mejor', 'card-peor'].forEach(function(id) { document.getElementById(id).textContent = '—'; });
+      ['card-mejor-val', 'card-peor-val'].forEach(function(id) { document.getElementById(id).textContent = ''; });
+    }
+  }
+
+  // ---- RENDER SEDES ----
+  function renderSedes(sedes) {
+    var container = document.getElementById('tabla-sedes-container');
+    if (!sedes || sedes.length === 0) {
+      container.innerHTML = '<p class="no-data">Sin datos en el período seleccionado</p>';
+      return;
+    }
+
+    var html = '<table class="tabla-sedes"><thead><tr>'
+      + '<th>Sede</th><th>Respuestas</th><th>Servicio</th><th>Comida</th><th>Infraestructura</th><th>Música</th><th>Promedio</th>'
+      + '</tr></thead><tbody>';
+
+    sedes.forEach(function(s) {
+      var prom = ((s.servicio + s.comida + s.infraestructura + s.musica) / 4).toFixed(2);
+      html += '<tr>'
+        + '<td class="sede-nombre">' + s.nombre_pv + '</td>'
+        + '<td>' + s.total + '</td>'
+        + '<td>' + scoreHtml(s.servicio) + '</td>'
+        + '<td>' + scoreHtml(s.comida) + '</td>'
+        + '<td>' + scoreHtml(s.infraestructura) + '</td>'
+        + '<td>' + scoreHtml(s.musica) + '</td>'
+        + '<td><strong>' + prom + '</strong></td>'
+        + '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function scoreHtml(val) {
+    var w = Math.round((val / 5) * 60);
+    return '<span class="score">' + val.toFixed(1)
+      + ' <span class="score-bar" style="width:' + w + 'px"></span></span>';
+  }
+
+  // ---- RENDER TENDENCIA ----
+  function renderTendencia(tendencia) {
+    var ctx = document.getElementById('chart-tendencia').getContext('2d');
+
+    if (state.chartTendencia) {
+      state.chartTendencia.destroy();
+      state.chartTendencia = null;
+    }
+
+    if (!tendencia || tendencia.length === 0) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.font = '14px Poppins, sans-serif';
+      ctx.fillStyle = '#999';
+      ctx.textAlign = 'center';
+      ctx.fillText('Sin datos en el período seleccionado', ctx.canvas.width / 2, 80);
+      return;
+    }
+
+    var labels = tendencia.map(function(t) { return t.fecha; });
+    var colores = {
+      servicio: 'rgba(255,102,0,1)',
+      comida: 'rgba(255,180,0,1)',
+      infraestructura: 'rgba(0,150,200,1)',
+      musica: 'rgba(100,200,80,1)'
+    };
+
+    var datasets = ['servicio', 'comida', 'infraestructura', 'musica'].map(function(cat) {
+      return {
+        label: CATEGORIAS[cat],
+        data: tendencia.map(function(t) { return t[cat]; }),
+        borderColor: colores[cat],
+        backgroundColor: colores[cat].replace('1)', '0.08)'),
+        tension: 0.3,
+        pointRadius: tendencia.length <= 10 ? 4 : 2,
+        borderWidth: 2,
+        fill: false
+      };
+    });
+
+    state.chartTendencia = new Chart(ctx, {
+      type: 'line',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            min: 1, max: 5,
+            ticks: { stepSize: 1, font: { family: 'Poppins', size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.06)' }
+          },
+          x: {
+            ticks: {
+              font: { family: 'Poppins', size: 10 },
+              maxRotation: 45,
+              maxTicksLimit: 14
+            },
+            grid: { display: false }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { font: { family: 'Poppins', size: 11 }, boxWidth: 14 }
+          }
+        }
+      }
+    });
+  }
+
+  // ---- RENDER DISTRIBUCIÓN ----
+  function renderDistribucion(dist, total) {
+    var grid = document.getElementById('dist-grid');
+    if (!dist || total === 0) {
+      grid.innerHTML = '<p class="no-data">Sin datos en el período seleccionado</p>';
+      return;
+    }
+
+    var html = '';
+    var emojis = ['😾', '😿', '😺', '😸', '😻'];
+    var labels = ['1 - Muy mal', '2 - Mal', '3 - Normal', '4 - Bueno', '5 - Excelente'];
+
+    ['servicio', 'comida', 'infraestructura', 'musica'].forEach(function(cat) {
+      var arr = dist[cat];
+      var maxVal = Math.max.apply(null, arr) || 1;
+      html += '<div class="dist-categoria"><h3>' + CATEGORIAS[cat] + '</h3>';
+      arr.forEach(function(count, i) {
+        var pct = Math.round((count / maxVal) * 100);
+        html += '<div class="dist-barra">'
+          + '<span class="dist-label">' + emojis[i] + '</span>'
+          + '<div class="dist-track"><div class="dist-fill" style="width:' + pct + '%"></div></div>'
+          + '<span class="dist-count">' + count + '</span>'
+          + '</div>';
+      });
+      html += '</div>';
+    });
+
+    grid.innerHTML = html;
+  }
+
+  // ---- RENDER COMENTARIOS ----
+  function renderComentarios(comentarios) {
+    var lista = document.getElementById('comentarios-lista');
+    if (!comentarios || comentarios.length === 0) {
+      lista.innerHTML = '<p class="no-data">No hay comentarios en el período seleccionado</p>';
+      return;
+    }
+
+    var html = '';
+    comentarios.forEach(function(c) {
+      html += '<div class="comentario-item">'
+        + '<div class="comentario-meta">'
+        + '<span class="comentario-sede">' + escHtml(c.nombre_pv) + '</span>'
+        + '<span class="comentario-fecha">' + c.timestamp + '</span>'
+        + (c.mesa ? '<span class="comentario-mesa">Mesa ' + escHtml(c.mesa) + '</span>' : '')
+        + '</div>'
+        + '<div class="comentario-texto">"' + escHtml(c.comentario) + '"</div>'
+        + '</div>';
+    });
+    lista.innerHTML = html;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ---- INIT ----
+  function showDashboard() {
+    document.getElementById('pin-screen').style.display = 'none';
+    document.getElementById('dashboard-screen').style.display = 'block';
+    cargarSedes();
+    calcularFechas();
+    cargarDashboard();
+  }
+
+  checkAuth();
+
+})();
+</script>
+</body>
+</html>
