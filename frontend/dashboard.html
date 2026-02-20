@@ -24,7 +24,7 @@
 
     body {
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, var(--amarillo) 0%, var(--naranja) 100%);
+      background: linear-gradient(135deg, #e8a800 0%, #d4670a 100%);
       min-height: 100vh;
       color: #333;
     }
@@ -489,6 +489,7 @@
       <label>Período</label><br/>
       <div class="periodo-btns">
         <button class="periodo-btn" data-periodo="hoy">Hoy</button>
+        <button class="periodo-btn" data-periodo="ayer">Ayer</button>
         <button class="periodo-btn" data-periodo="7">7 días</button>
         <button class="periodo-btn active" data-periodo="30">30 días</button>
         <button class="periodo-btn" data-periodo="mes">Este mes</button>
@@ -673,6 +674,11 @@
     switch (state.periodo) {
       case 'hoy':
         inicio = fin;
+        break;
+      case 'ayer':
+        var ayer = new Date(hoy - 86400000);
+        inicio = formatDate(ayer);
+        fin = inicio;
         break;
       case '7':
         inicio = formatDate(new Date(hoy - 6 * 86400000));
