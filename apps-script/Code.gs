@@ -232,7 +232,62 @@ function saveRating(data) {
     data.comentario || ''
   ]);
 
+  // Alerta si alguna categoría recibe calificación de 1 estrella (20%)
+  if (servicio === 1 || comida === 1 || infraestructura === 1 || musica === 1) {
+    try {
+      enviarAlertaCalificacion({
+        nombre_pv: configResult.config.nombre_pv,
+        mesa: data.numero_mesa ? data.numero_mesa.toString().trim() : '—',
+        servicio: servicio,
+        comida: comida,
+        infraestructura: infraestructura,
+        musica: musica,
+        comentario: data.comentario || ''
+      });
+    } catch(emailErr) {
+      Logger.log('Error enviando alerta por email: ' + emailErr);
+    }
+  }
+
   return { success: true, message: '¡Gracias por tu calificación!' };
+}
+
+/**
+ * Envía alerta por email cuando una calificación es de 1 estrella (20%)
+ * Requiere Script Properties: ALERTA_EMAIL_TO (destinatario)
+ * Opcional: ALERTA_EMAIL_FROM (alias "Enviar como" configurado en Gmail)
+ */
+function enviarAlertaCalificacion(params) {
+  var props = PropertiesService.getScriptProperties();
+  var emailTo = props.getProperty('ALERTA_EMAIL_TO');
+  if (!emailTo) return; // Sin destinatario configurado, no hacer nada
+
+  var emailFrom = props.getProperty('ALERTA_EMAIL_FROM');
+
+  var hora = Utilities.formatDate(new Date(), 'America/Bogota', 'dd/MM/yyyy HH:mm');
+  var pct = function(v) { return (v * 20) + '%'; };
+  var promedio = ((params.servicio + params.comida + params.infraestructura + params.musica) / 4 * 20).toFixed(1) + '%';
+
+  var asunto = '⚠️ Alerta Calificación BAJA — ' + params.nombre_pv;
+
+  var cuerpo = [
+    '⚠️  ALERTA: Calificación muy baja registrada\n',
+    'SEDE: ' + params.nombre_pv + '    |    Mesa: ' + params.mesa + '    |    Hora: ' + hora,
+    '',
+    'Servicio:         ' + pct(params.servicio),
+    'Comida:           ' + pct(params.comida),
+    'Infraestructura:  ' + pct(params.infraestructura),
+    'Música:           ' + pct(params.musica),
+    'Promedio:         ' + promedio,
+    '',
+    'Observaciones del cliente:',
+    params.comentario || '(sin comentario)'
+  ].join('\n');
+
+  var opciones = { name: 'El Parche del Gato — Alertas' };
+  if (emailFrom) opciones.from = emailFrom;
+
+  GmailApp.sendEmail(emailTo, asunto, cuerpo, opciones);
 }
 
 /**
@@ -286,6 +341,7 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
   var resumen = { total: 0, servicio: 0, comida: 0, infraestructura: 0, musica: 0 };
   var porSedeMap = {};
   var tendenciaMap = {};
+  var porMesaMap = {};
   var distribucion = {
     servicio: [0, 0, 0, 0, 0],
     comida: [0, 0, 0, 0, 0],
@@ -348,6 +404,26 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
     if (infraestructura >= 1 && infraestructura <= 5) distribucion.infraestructura[infraestructura - 1]++;
     if (musica >= 1 && musica <= 5) distribucion.musica[musica - 1]++;
 
+    // Por mesa (solo si tiene número de mesa)
+    var mesaKey = rowMesa ? String(rowMesa).trim() : '';
+    if (mesaKey) {
+      if (!porMesaMap[mesaKey]) {
+        porMesaMap[mesaKey] = {
+          mesa: mesaKey,
+          total: 0,
+          servicio: [0, 0, 0, 0, 0],
+          comida: [0, 0, 0, 0, 0],
+          infraestructura: [0, 0, 0, 0, 0],
+          musica: [0, 0, 0, 0, 0]
+        };
+      }
+      porMesaMap[mesaKey].total++;
+      if (servicio >= 1 && servicio <= 5) porMesaMap[mesaKey].servicio[servicio - 1]++;
+      if (comida >= 1 && comida <= 5) porMesaMap[mesaKey].comida[comida - 1]++;
+      if (infraestructura >= 1 && infraestructura <= 5) porMesaMap[mesaKey].infraestructura[infraestructura - 1]++;
+      if (musica >= 1 && musica <= 5) porMesaMap[mesaKey].musica[musica - 1]++;
+    }
+
     // Comentarios no vacíos
     if (comentario) {
       comentarios.push({
@@ -404,13 +480,17 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
   // Últimos 20 comentarios (más recientes primero)
   comentarios = comentarios.reverse().slice(0, 20);
 
+  // Por mesa: ordenar por total descendente
+  var porMesa = Object.values(porMesaMap).sort(function(a, b) { return b.total - a.total; });
+
   return {
     success: true,
     resumen: resumen,
     por_sede: porSede,
     tendencia: tendencia,
     distribucion: distribucion,
-    comentarios: comentarios
+    comentarios: comentarios,
+    por_mesa: porMesa
   };
 }
 

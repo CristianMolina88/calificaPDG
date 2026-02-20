@@ -194,6 +194,15 @@
       text-align: right;
     }
 
+    #ultima-actualizacion { font-size: 0.7rem; color: var(--gris-texto); }
+
+    #refresh-countdown {
+      font-size: 0.68rem;
+      color: var(--gris-texto);
+      margin-top: 1px;
+    }
+    #refresh-countdown strong { color: var(--naranja-oscuro); }
+
     #btn-salir {
       background: transparent;
       border: 1.5px solid var(--naranja-oscuro);
@@ -343,6 +352,38 @@
       letter-spacing: 0.5px;
     }
 
+    /* Encabezado de sección con control adicional */
+    .seccion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .seccion-header h2 { margin-bottom: 0; }
+
+    .umbral-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--gris-texto);
+    }
+
+    .umbral-control select {
+      padding: 5px 10px;
+      border: 1.5px solid var(--border-btn);
+      border-radius: 50px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.78rem;
+      background: var(--bg-card);
+      color: var(--color-texto);
+      outline: none;
+      cursor: pointer;
+    }
+
     /* Tabla sedes */
     .tabla-sedes {
       width: 100%;
@@ -367,7 +408,6 @@
     }
 
     .tabla-sedes tr:last-child td { border-bottom: none; }
-
     .tabla-sedes .sede-nombre { font-weight: 600; }
 
     .score {
@@ -383,6 +423,39 @@
       border-radius: 3px;
       background: linear-gradient(90deg, var(--naranja-oscuro), var(--amarillo));
     }
+
+    /* Tabla mesas */
+    .tabla-mesas {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+
+    .tabla-mesas th {
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--bg-table-head);
+      color: var(--naranja-oscuro);
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .tabla-mesas td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--separador);
+      color: var(--color-texto);
+    }
+
+    .tabla-mesas tr:last-child td { border-bottom: none; }
+
+    .td-bajo {
+      color: #e53935;
+      font-weight: 700;
+      background: rgba(229,57,53,0.06);
+    }
+
+    .td-ok { color: var(--gris-texto); }
 
     /* Gráfico tendencia */
     .chart-container {
@@ -489,6 +562,9 @@
 
       .tabla-sedes th:nth-child(n+3),
       .tabla-sedes td:nth-child(n+3) { display: none; }
+
+      .tabla-mesas th:nth-child(n+4),
+      .tabla-mesas td:nth-child(n+4) { display: none; }
     }
 
     @media (max-width: 480px) {
@@ -526,6 +602,7 @@
     </div>
     <div class="dash-header-right">
       <div id="ultima-actualizacion"></div>
+      <div id="refresh-countdown"></div>
       <div style="display:flex;gap:6px;margin-top:4px;justify-content:flex-end">
         <button id="btn-tema">☀️ Claro</button>
         <button id="btn-salir">Cerrar sesión</button>
@@ -570,7 +647,7 @@
     <div class="card">
       <div class="card-label">Promedio general</div>
       <div class="card-value" id="card-general">—</div>
-      <div class="card-sub">sobre 5.0</div>
+      <div class="card-sub">satisfacción</div>
     </div>
     <div class="card">
       <div class="card-label">Mejor categoría</div>
@@ -588,6 +665,22 @@
   <div class="seccion" id="seccion-sedes">
     <h2>Comparativo por sede</h2>
     <div id="tabla-sedes-container"></div>
+  </div>
+
+  <!-- Mesas con alertas -->
+  <div class="seccion" id="seccion-mesas">
+    <div class="seccion-header">
+      <h2>⚠️ Mesas con alertas</h2>
+      <div class="umbral-control">
+        <label for="sel-umbral">Umbral:</label>
+        <select id="sel-umbral">
+          <option value="20">20% (solo 1★)</option>
+          <option value="40" selected>40% (≤ 2★)</option>
+          <option value="60">60% (≤ 3★)</option>
+        </select>
+      </div>
+    </div>
+    <div id="tabla-mesas-container"></div>
   </div>
 
   <!-- Tendencia -->
@@ -619,14 +712,26 @@
   var API_URL = CONFIG.API_URL;
   var ADMIN_PIN = CONFIG.ADMIN_PIN;
   var SESSION_KEY = 'pdg_dash_auth';
+  var TEMA_KEY = 'pdg_dash_tema';
+  var UMBRAL_KEY = 'pdg_dash_umbral';
+  var REFRESH_INTERVAL = 5 * 60; // segundos
 
   var state = {
     sede: 'ALL',
     fechaInicio: null,
     fechaFin: null,
     periodo: '30',
+    umbral: 40,
+    porMesaDatos: [],
     chartTendencia: null
   };
+
+  var countdownTimer = null;
+  var refreshSecondsLeft = REFRESH_INTERVAL;
+
+  // ---- HELPERS DE PORCENTAJE ----
+  function toPct(val) { return Math.round(val * 20); }
+  function fmtPct(val) { return toPct(val) + '%'; }
 
   // ---- JSONP ----
   function fetchWithCallback(url, timeoutMs) {
@@ -665,8 +770,6 @@
   }
 
   // ---- TEMA ----
-  var TEMA_KEY = 'pdg_dash_tema';
-
   function aplicarTema(tema) {
     if (tema === 'oscuro') {
       document.body.classList.add('tema-oscuro');
@@ -683,8 +786,30 @@
     aplicarTema(actual === 'claro' ? 'oscuro' : 'claro');
   });
 
-  // Restaurar tema guardado
   aplicarTema(localStorage.getItem(TEMA_KEY) || 'claro');
+
+  // ---- AUTO-REFRESH ----
+  function iniciarAutoRefresh() {
+    clearInterval(countdownTimer);
+    refreshSecondsLeft = REFRESH_INTERVAL;
+    actualizarContador();
+
+    countdownTimer = setInterval(function() {
+      refreshSecondsLeft--;
+      actualizarContador();
+      if (refreshSecondsLeft <= 0) {
+        refreshSecondsLeft = REFRESH_INTERVAL;
+        cargarDashboard();
+      }
+    }, 1000);
+  }
+
+  function actualizarContador() {
+    var m = Math.floor(refreshSecondsLeft / 60);
+    var s = refreshSecondsLeft % 60;
+    var el = document.getElementById('refresh-countdown');
+    if (el) el.innerHTML = 'Actualización en <strong>' + m + ':' + (s < 10 ? '0' : '') + s + '</strong>';
+  }
 
   // ---- AUTENTICACIÓN ----
   function checkAuth() {
@@ -710,6 +835,7 @@
   });
 
   document.getElementById('btn-salir').addEventListener('click', function() {
+    clearInterval(countdownTimer);
     sessionStorage.removeItem(SESSION_KEY);
     document.getElementById('pin-screen').style.display = 'flex';
     document.getElementById('dashboard-screen').style.display = 'none';
@@ -742,6 +868,13 @@
     state.fechaInicio = document.getElementById('fecha-inicio').value;
     state.fechaFin = document.getElementById('fecha-fin').value;
     if (state.fechaInicio && state.fechaFin) cargarDashboard();
+  });
+
+  // ---- UMBRAL ----
+  document.getElementById('sel-umbral').addEventListener('change', function() {
+    state.umbral = +this.value;
+    sessionStorage.setItem(UMBRAL_KEY, state.umbral);
+    renderMesas(state.porMesaDatos, state.umbral);
   });
 
   function calcularFechas() {
@@ -807,13 +940,16 @@
     apiCall(url).then(function(data) {
       overlay.style.display = 'none';
       if (data.success) {
+        state.porMesaDatos = data.por_mesa || [];
         renderResumen(data.resumen);
         renderSedes(data.por_sede);
+        renderMesas(state.porMesaDatos, state.umbral);
         renderTendencia(data.tendencia);
         renderDistribucion(data.distribucion, data.resumen.total);
         renderComentarios(data.comentarios);
         document.getElementById('ultima-actualizacion').textContent =
           'Actualizado: ' + new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+        iniciarAutoRefresh();
       }
     }).catch(function(err) {
       overlay.style.display = 'none';
@@ -826,7 +962,7 @@
 
   function renderResumen(r) {
     document.getElementById('card-total').textContent = r.total;
-    document.getElementById('card-general').textContent = r.total > 0 ? r.general.toFixed(2) : '—';
+    document.getElementById('card-general').textContent = r.total > 0 ? fmtPct(r.general) : '—';
 
     if (r.total > 0) {
       var cats = ['servicio', 'comida', 'infraestructura', 'musica'];
@@ -835,9 +971,9 @@
       var minIdx = vals.indexOf(Math.min.apply(null, vals));
 
       document.getElementById('card-mejor').textContent = CATEGORIAS[cats[maxIdx]];
-      document.getElementById('card-mejor-val').textContent = vals[maxIdx].toFixed(2) + ' / 5.0';
+      document.getElementById('card-mejor-val').textContent = fmtPct(vals[maxIdx]);
       document.getElementById('card-peor').textContent = CATEGORIAS[cats[minIdx]];
-      document.getElementById('card-peor-val').textContent = vals[minIdx].toFixed(2) + ' / 5.0';
+      document.getElementById('card-peor-val').textContent = fmtPct(vals[minIdx]);
     } else {
       ['card-mejor', 'card-peor'].forEach(function(id) { document.getElementById(id).textContent = '—'; });
       ['card-mejor-val', 'card-peor-val'].forEach(function(id) { document.getElementById(id).textContent = ''; });
@@ -857,7 +993,7 @@
       + '</tr></thead><tbody>';
 
     sedes.forEach(function(s) {
-      var prom = ((s.servicio + s.comida + s.infraestructura + s.musica) / 4).toFixed(2);
+      var prom = Math.round((s.servicio + s.comida + s.infraestructura + s.musica) / 4 * 20) + '%';
       html += '<tr>'
         + '<td class="sede-nombre">' + s.nombre_pv + '</td>'
         + '<td>' + s.total + '</td>'
@@ -875,8 +1011,62 @@
 
   function scoreHtml(val) {
     var w = Math.round((val / 5) * 60);
-    return '<span class="score">' + val.toFixed(1)
+    return '<span class="score">' + fmtPct(val)
       + ' <span class="score-bar" style="width:' + w + 'px"></span></span>';
+  }
+
+  // ---- RENDER MESAS ----
+  function renderMesas(porMesa, umbral) {
+    var container = document.getElementById('tabla-mesas-container');
+    if (!porMesa || porMesa.length === 0) {
+      container.innerHTML = '<p class="no-data">Sin datos de mesa en el período seleccionado</p>';
+      return;
+    }
+
+    var maxRating = Math.floor(umbral / 20); // cuántos niveles de rating contar como "bajos"
+
+    var datos = porMesa.map(function(m) {
+      var cats = ['servicio', 'comida', 'infraestructura', 'musica'];
+      var bajosXCat = {};
+      cats.forEach(function(cat) {
+        var arr = m[cat] || [0, 0, 0, 0, 0];
+        var count = 0;
+        for (var i = 0; i < maxRating; i++) count += (arr[i] || 0);
+        bajosXCat[cat] = count;
+      });
+      var totalBajos = bajosXCat.servicio + bajosXCat.comida + bajosXCat.infraestructura + bajosXCat.musica;
+      return { mesa: m.mesa, total: m.total, bajosXCat: bajosXCat, totalBajos: totalBajos };
+    }).filter(function(m) { return m.totalBajos > 0; })
+      .sort(function(a, b) { return b.totalBajos - a.totalBajos; });
+
+    if (datos.length === 0) {
+      container.innerHTML = '<p class="no-data">✅ Ninguna mesa con calificaciones bajo el umbral en el período</p>';
+      return;
+    }
+
+    var html = '<table class="tabla-mesas"><thead><tr>'
+      + '<th>Mesa</th><th>Respuestas</th><th>Servicio</th><th>Comida</th><th>Infraest.</th><th>Música</th><th>Total bajos</th>'
+      + '</tr></thead><tbody>';
+
+    datos.forEach(function(m) {
+      html += '<tr>'
+        + '<td><strong>' + escHtml(m.mesa) + '</strong></td>'
+        + '<td>' + m.total + '</td>'
+        + tdBajo(m.bajosXCat.servicio)
+        + tdBajo(m.bajosXCat.comida)
+        + tdBajo(m.bajosXCat.infraestructura)
+        + tdBajo(m.bajosXCat.musica)
+        + '<td class="td-bajo">⚠️ ' + m.totalBajos + '</td>'
+        + '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function tdBajo(count) {
+    if (count > 0) return '<td class="td-bajo">' + count + '</td>';
+    return '<td class="td-ok">—</td>';
   }
 
   // ---- RENDER TENDENCIA ----
@@ -908,7 +1098,7 @@
     var datasets = ['servicio', 'comida', 'infraestructura', 'musica'].map(function(cat) {
       return {
         label: CATEGORIAS[cat],
-        data: tendencia.map(function(t) { return t[cat]; }),
+        data: tendencia.map(function(t) { return toPct(t[cat]); }),
         borderColor: colores[cat],
         backgroundColor: colores[cat].replace('1)', '0.08)'),
         tension: 0.3,
@@ -926,8 +1116,12 @@
         maintainAspectRatio: false,
         scales: {
           y: {
-            min: 1, max: 5,
-            ticks: { stepSize: 1, font: { family: 'Poppins', size: 11 } },
+            min: 0, max: 100,
+            ticks: {
+              stepSize: 20,
+              font: { family: 'Poppins', size: 11 },
+              callback: function(v) { return v + '%'; }
+            },
             grid: { color: 'rgba(0,0,0,0.06)' }
           },
           x: {
@@ -942,6 +1136,11 @@
         plugins: {
           legend: {
             labels: { font: { family: 'Poppins', size: 11 }, boxWidth: 14 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y + '%'; }
+            }
           }
         }
       }
@@ -958,7 +1157,7 @@
 
     var html = '';
     var emojis = ['😾', '😿', '😺', '😸', '😻'];
-    var labels = ['1 - Muy mal', '2 - Mal', '3 - Normal', '4 - Bueno', '5 - Excelente'];
+    var labels = ['1 — 20%', '2 — 40%', '3 — 60%', '4 — 80%', '5 — 100%'];
 
     ['servicio', 'comida', 'infraestructura', 'musica'].forEach(function(cat) {
       var arr = dist[cat];
@@ -1010,6 +1209,14 @@
 
   // ---- INIT ----
   function showDashboard() {
+    // Restaurar umbral guardado
+    var savedUmbral = sessionStorage.getItem(UMBRAL_KEY);
+    if (savedUmbral) {
+      state.umbral = +savedUmbral;
+      var selUmbral = document.getElementById('sel-umbral');
+      if (selUmbral) selUmbral.value = savedUmbral;
+    }
+
     document.getElementById('pin-screen').style.display = 'none';
     document.getElementById('dashboard-screen').style.display = 'block';
     cargarSedes();
