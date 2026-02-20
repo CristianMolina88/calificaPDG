@@ -691,6 +691,14 @@
     </div>
   </div>
 
+  <!-- Calificaciones por hora -->
+  <div class="seccion">
+    <h2>Calificaciones por hora</h2>
+    <div class="chart-container">
+      <canvas id="chart-horas"></canvas>
+    </div>
+  </div>
+
   <!-- Distribución -->
   <div class="seccion">
     <h2>Distribución de calificaciones</h2>
@@ -723,7 +731,8 @@
     periodo: '30',
     umbral: 40,
     porMesaDatos: [],
-    chartTendencia: null
+    chartTendencia: null,
+    chartHoras: null
   };
 
   var countdownTimer = null;
@@ -945,6 +954,7 @@
         renderSedes(data.por_sede);
         renderMesas(state.porMesaDatos, state.umbral);
         renderTendencia(data.tendencia);
+        renderHoras(data.por_hora || []);
         renderDistribucion(data.distribucion, data.resumen.total);
         renderComentarios(data.comentarios);
         document.getElementById('ultima-actualizacion').textContent =
@@ -1139,6 +1149,83 @@
           },
           tooltip: {
             callbacks: {
+              label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y + '%'; }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ---- RENDER HORAS ----
+  function renderHoras(porHora) {
+    var ctx = document.getElementById('chart-horas').getContext('2d');
+
+    if (state.chartHoras) {
+      state.chartHoras.destroy();
+      state.chartHoras = null;
+    }
+
+    if (!porHora || porHora.length === 0) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.font = '14px Poppins, sans-serif';
+      ctx.fillStyle = '#999';
+      ctx.textAlign = 'center';
+      ctx.fillText('Sin datos en el período seleccionado', ctx.canvas.width / 2, 80);
+      return;
+    }
+
+    var labels = porHora.map(function(h) { return h.hora + ':00'; });
+    var totales = porHora.map(function(h) { return h.total; });
+    var colores = {
+      servicio: 'rgba(255,102,0,0.85)',
+      comida: 'rgba(255,180,0,0.85)',
+      infraestructura: 'rgba(0,150,200,0.85)',
+      musica: 'rgba(100,200,80,0.85)'
+    };
+
+    var datasets = ['servicio', 'comida', 'infraestructura', 'musica'].map(function(cat) {
+      return {
+        label: CATEGORIAS[cat],
+        data: porHora.map(function(h) { return toPct(h[cat]); }),
+        backgroundColor: colores[cat],
+        borderRadius: 4,
+        barPercentage: 0.85,
+        categoryPercentage: 0.8
+      };
+    });
+
+    state.chartHoras = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            min: 0, max: 100,
+            ticks: {
+              stepSize: 20,
+              font: { family: 'Poppins', size: 11 },
+              callback: function(v) { return v + '%'; }
+            },
+            grid: { color: 'rgba(0,0,0,0.06)' }
+          },
+          x: {
+            ticks: { font: { family: 'Poppins', size: 10 } },
+            grid: { display: false }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { font: { family: 'Poppins', size: 11 }, boxWidth: 14 }
+          },
+          tooltip: {
+            callbacks: {
+              afterTitle: function(ctx) {
+                var idx = ctx[0].dataIndex;
+                return totales[idx] + ' respuestas';
+              },
               label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y + '%'; }
             }
           }

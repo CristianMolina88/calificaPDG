@@ -342,6 +342,7 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
   var porSedeMap = {};
   var tendenciaMap = {};
   var porMesaMap = {};
+  var porHoraMap = {};
   var distribucion = {
     servicio: [0, 0, 0, 0, 0],
     comida: [0, 0, 0, 0, 0],
@@ -403,6 +404,17 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
     if (comida >= 1 && comida <= 5) distribucion.comida[comida - 1]++;
     if (infraestructura >= 1 && infraestructura <= 5) distribucion.infraestructura[infraestructura - 1]++;
     if (musica >= 1 && musica <= 5) distribucion.musica[musica - 1]++;
+
+    // Por hora
+    var hora = rowDate.getHours();
+    if (!porHoraMap[hora]) {
+      porHoraMap[hora] = { hora: hora, total: 0, servicio: 0, comida: 0, infraestructura: 0, musica: 0 };
+    }
+    porHoraMap[hora].total++;
+    porHoraMap[hora].servicio += servicio;
+    porHoraMap[hora].comida += comida;
+    porHoraMap[hora].infraestructura += infraestructura;
+    porHoraMap[hora].musica += musica;
 
     // Por mesa (solo si tiene número de mesa)
     var mesaKey = rowMesa ? String(rowMesa).trim() : '';
@@ -483,6 +495,21 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
   // Por mesa: ordenar por total descendente
   var porMesa = Object.values(porMesaMap).sort(function(a, b) { return b.total - a.total; });
 
+  // Por hora: calcular promedios y ordenar por hora
+  var porHora = Object.values(porHoraMap).map(function(h) {
+    if (h.total > 0) {
+      return {
+        hora: h.hora,
+        total: h.total,
+        servicio: Math.round((h.servicio / h.total) * 100) / 100,
+        comida: Math.round((h.comida / h.total) * 100) / 100,
+        infraestructura: Math.round((h.infraestructura / h.total) * 100) / 100,
+        musica: Math.round((h.musica / h.total) * 100) / 100
+      };
+    }
+    return h;
+  }).sort(function(a, b) { return a.hora - b.hora; });
+
   return {
     success: true,
     resumen: resumen,
@@ -490,7 +517,8 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
     tendencia: tendencia,
     distribucion: distribucion,
     comentarios: comentarios,
-    por_mesa: porMesa
+    por_mesa: porMesa,
+    por_hora: porHora
   };
 }
 
