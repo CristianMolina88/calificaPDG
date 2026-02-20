@@ -765,7 +765,7 @@
 
   function apiCall(url) {
     return fetchWithCallback(url, 15000).catch(function() {
-      return fetch(url).then(function(r) { return r.json(); });
+      return fetch(url, { credentials: 'omit', redirect: 'follow' }).then(function(r) { return r.json(); });
     });
   }
 
