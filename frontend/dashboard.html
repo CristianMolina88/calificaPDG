@@ -11,23 +11,70 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --amarillo: #ffcc00;
       --naranja: #ff9800;
       --naranja-oscuro: #ff6600;
-      --blanco: #ffffff;
-      --gris: #f5f5f5;
-      --gris-texto: #555;
-      --sombra: rgba(0,0,0,0.1);
+      --amarillo: #ffcc00;
       --radius: 16px;
       --radius-sm: 10px;
+
+      /* Tema claro (default) */
+      --bg-body: #f0f0f0;
+      --bg-card: #ffffff;
+      --bg-card-alt: rgba(255,255,255,0.95);
+      --bg-header: #ffffff;
+      --bg-filtros: #ffffff;
+      --bg-table-head: rgba(255,150,0,0.08);
+      --bg-dist-track: rgba(0,0,0,0.07);
+      --bg-periodo: #f5f5f5;
+      --color-texto: #222;
+      --gris-texto: #666;
+      --border-color: rgba(0,0,0,0.08);
+      --border-btn: rgba(255,150,0,0.5);
+      --separador: rgba(0,0,0,0.07);
+      --bg-loading: rgba(255,255,255,0.7);
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    body.tema-oscuro {
+      --bg-body: #18191e;
+      --bg-card: #23252c;
+      --bg-card-alt: #23252c;
+      --bg-header: #23252c;
+      --bg-filtros: #23252c;
+      --bg-table-head: rgba(255,150,0,0.1);
+      --bg-dist-track: rgba(255,255,255,0.07);
+      --bg-periodo: #2c2e35;
+      --color-texto: #f0f0f0;
+      --gris-texto: #aaa;
+      --border-color: rgba(255,255,255,0.07);
+      --border-btn: rgba(255,150,0,0.4);
+      --separador: rgba(255,255,255,0.07);
+      --bg-loading: rgba(0,0,0,0.6);
+      --shadow: 0 2px 16px rgba(0,0,0,0.4);
     }
 
     body {
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #e8a800 0%, #d4670a 100%);
+      background: var(--bg-body);
       min-height: 100vh;
-      color: #333;
+      color: var(--color-texto);
+      transition: background 0.3s, color 0.3s;
     }
+
+    /* Toggle tema */
+    #btn-tema {
+      background: var(--bg-periodo);
+      border: 1.5px solid var(--border-btn);
+      color: var(--gris-texto);
+      border-radius: 50px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: all 0.2s;
+    }
+    #btn-tema:hover { border-color: var(--naranja-oscuro); color: var(--naranja-oscuro); }
 
     /* ---- PIN SCREEN ---- */
     #pin-screen {
@@ -41,7 +88,7 @@
     }
 
     #pin-screen .pin-card {
-      background: rgba(255,255,255,0.92);
+      background: var(--bg-card);
       border-radius: var(--radius);
       padding: 40px 32px;
       text-align: center;
@@ -120,10 +167,11 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      background: rgba(255,255,255,0.85);
+      background: var(--bg-header);
       border-radius: var(--radius);
       padding: 14px 20px;
       margin-bottom: 18px;
+      box-shadow: var(--shadow);
     }
 
     .dash-header img { width: 52px; height: 52px; object-fit: contain; }
@@ -160,7 +208,7 @@
 
     /* Filtros */
     .filtros {
-      background: rgba(255,255,255,0.85);
+      background: var(--bg-filtros);
       border-radius: var(--radius);
       padding: 14px 20px;
       margin-bottom: 18px;
@@ -178,12 +226,13 @@
 
     .filtros select, .filtros input[type="date"] {
       padding: 7px 12px;
-      border: 1.5px solid rgba(255,150,0,0.4);
+      border: 1.5px solid var(--border-btn);
       border-radius: 50px;
       font-family: 'Poppins', sans-serif;
       font-size: 0.82rem;
       outline: none;
-      background: white;
+      background: var(--bg-card);
+      color: var(--color-texto);
     }
 
     .filtros select:focus, .filtros input[type="date"]:focus {
@@ -199,8 +248,9 @@
     .periodo-btn {
       padding: 6px 14px;
       border-radius: 50px;
-      border: 1.5px solid rgba(255,150,0,0.4);
-      background: white;
+      border: 1.5px solid var(--border-btn);
+      background: var(--bg-periodo);
+      color: var(--color-texto);
       font-family: 'Poppins', sans-serif;
       font-size: 0.78rem;
       cursor: pointer;
@@ -231,7 +281,8 @@
     }
 
     .card {
-      background: rgba(255,255,255,0.9);
+      background: var(--bg-card);
+      box-shadow: var(--shadow);
       border-radius: var(--radius);
       padding: 18px 16px;
       text-align: center;
@@ -264,7 +315,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(255,200,0,0.4);
+      background: var(--bg-loading);
       backdrop-filter: blur(4px);
       z-index: 100;
       align-items: center;
@@ -276,7 +327,8 @@
 
     /* Sección */
     .seccion {
-      background: rgba(255,255,255,0.9);
+      background: var(--bg-card);
+      box-shadow: var(--shadow);
       border-radius: var(--radius);
       padding: 20px;
       margin-bottom: 18px;
@@ -301,7 +353,7 @@
     .tabla-sedes th {
       text-align: left;
       padding: 8px 12px;
-      background: rgba(255,150,0,0.1);
+      background: var(--bg-table-head);
       color: var(--naranja-oscuro);
       font-weight: 700;
       font-size: 0.75rem;
@@ -310,7 +362,8 @@
 
     .tabla-sedes td {
       padding: 10px 12px;
-      border-bottom: 1px solid rgba(255,150,0,0.15);
+      border-bottom: 1px solid var(--separador);
+      color: var(--color-texto);
     }
 
     .tabla-sedes tr:last-child td { border-bottom: none; }
@@ -366,7 +419,7 @@
     .dist-track {
       flex: 1;
       height: 16px;
-      background: rgba(255,150,0,0.12);
+      background: var(--bg-dist-track);
       border-radius: 8px;
       overflow: hidden;
     }
@@ -382,7 +435,7 @@
 
     /* Comentarios */
     .comentario-item {
-      border-bottom: 1px solid rgba(255,150,0,0.2);
+      border-bottom: 1px solid var(--separador);
       padding: 12px 0;
     }
 
@@ -417,7 +470,7 @@
 
     .comentario-texto {
       font-size: 0.85rem;
-      color: #333;
+      color: var(--color-texto);
       font-style: italic;
     }
 
@@ -473,7 +526,10 @@
     </div>
     <div class="dash-header-right">
       <div id="ultima-actualizacion"></div>
-      <button id="btn-salir">Cerrar sesión</button>
+      <div style="display:flex;gap:6px;margin-top:4px;justify-content:flex-end">
+        <button id="btn-tema">☀️ Claro</button>
+        <button id="btn-salir">Cerrar sesión</button>
+      </div>
     </div>
   </div>
 
@@ -607,6 +663,28 @@
       return fetch(url).then(function(r) { return r.json(); });
     });
   }
+
+  // ---- TEMA ----
+  var TEMA_KEY = 'pdg_dash_tema';
+
+  function aplicarTema(tema) {
+    if (tema === 'oscuro') {
+      document.body.classList.add('tema-oscuro');
+      document.getElementById('btn-tema').textContent = '🌙 Oscuro';
+    } else {
+      document.body.classList.remove('tema-oscuro');
+      document.getElementById('btn-tema').textContent = '☀️ Claro';
+    }
+    localStorage.setItem(TEMA_KEY, tema);
+  }
+
+  document.getElementById('btn-tema').addEventListener('click', function() {
+    var actual = localStorage.getItem(TEMA_KEY) || 'claro';
+    aplicarTema(actual === 'claro' ? 'oscuro' : 'claro');
+  });
+
+  // Restaurar tema guardado
+  aplicarTema(localStorage.getItem(TEMA_KEY) || 'claro');
 
   // ---- AUTENTICACIÓN ----
   function checkAuth() {
