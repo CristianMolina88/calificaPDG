@@ -416,8 +416,8 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
     porHoraMap[hora].infraestructura += infraestructura;
     porHoraMap[hora].musica += musica;
 
-    // Por mesa (solo si tiene número de mesa)
-    var mesaKey = rowMesa ? String(rowMesa).trim() : '';
+    // Por mesa (solo si tiene número de mesa — rowMesa==0 es válido, no usar truthy)
+    var mesaKey = (rowMesa != null && rowMesa !== '') ? String(rowMesa).trim() : '';
     if (mesaKey) {
       if (!porMesaMap[mesaKey]) {
         porMesaMap[mesaKey] = {
@@ -441,7 +441,7 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
       comentarios.push({
         timestamp: Utilities.formatDate(rowDate, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm'),
         nombre_pv: rowNombre,
-        mesa: rowMesa ? String(rowMesa) : '',
+        mesa: (rowMesa != null && rowMesa !== '') ? String(rowMesa) : '',
         comentario: comentario
       });
     }
