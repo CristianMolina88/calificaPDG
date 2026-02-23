@@ -29,8 +29,9 @@ Dos paginas independientes:
 - Patron IIFE, mismo estilo de `fetchWithCallback` que app.js
 - Auto-refresh cada 5 minutos con countdown visible
 - Tema claro/oscuro toggle, persistido en localStorage (`pdg_dash_tema`)
-- Chart.js para grafico de tendencia en el tiempo
+- Chart.js para graficos: tendencia (lineas) y calificaciones por hora (barras agrupadas)
 - Umbral de alertas de mesas seleccionable, persistido en sessionStorage
+- Fetch fallback con `credentials: 'omit'` para compatibilidad iOS
 
 ### Backend (Google Apps Script)
 
@@ -66,11 +67,13 @@ Dos paginas independientes:
   "tendencia": [{ "fecha": "2024-01-15", "total": 8, "servicio": 4.0, ... }],
   "distribucion": { "servicio": [2, 5, 10, 20, 13], "comida": [...], ... },
   "comentarios": [{ "timestamp": "...", "nombre_pv": "...", "mesa": "5", "comentario": "..." }],
-  "por_mesa": [{ "mesa": "5", "total": 12, "servicio": [3,2,4,2,1], "comida": [...], ... }]
+  "por_mesa": [{ "mesa": "5", "total": 12, "servicio": [3,2,4,2,1], "comida": [...], ... }],
+  "por_hora": [{ "hora": 12, "total": 15, "servicio": 4.2, "comida": 4.5, "infraestructura": 3.9, "musica": 4.0 }]
 }
 ```
 
-`por_mesa`: arrays de 5 posiciones = conteo de ratings 1,2,3,4,5 por categoria.
+- `por_mesa`: arrays de 5 posiciones = conteo de ratings 1,2,3,4,5 por categoria. Mesa 0 es valor valido (check explicito, no truthy).
+- `por_hora`: promedios por hora del dia (0-23), ordenados cronologicamente. El frontend convierte a % (x20).
 
 ## Funcionalidades
 
@@ -95,6 +98,7 @@ Dos paginas independientes:
   - Calculo cliente-side sobre datos de `por_mesa` del API
   - Celdas con alertas resaltadas en rojo
 - **Tendencia:** grafico de lineas Chart.js, eje Y 0-100%, marcas cada 20%
+- **Calificaciones por hora:** grafico de barras agrupadas Chart.js, promedio % por hora del dia, 4 categorias, tooltip con cantidad de respuestas
 - **Distribucion:** barras por nivel de rating por categoria
 - **Comentarios:** ultimos 20 no vacios
 - **Auto-refresh:** cada 5 minutos con countdown visible en header
@@ -170,12 +174,15 @@ Dos paginas independientes:
 ## Decisiones Tecnicas Clave
 
 - **JSONP primero:** Las tablets Android bloquean fetch por CORS hacia Google Apps Script. JSONP inyecta un `<script>` que no tiene restriccion CORS.
+- **Fetch con credentials omit:** iOS Safari/Chrome (WebKit) bloquea fetch cross-origin por ITP. Se usa `credentials: 'omit'` en el fallback fetch.
 - **Strict boolean check:** `solicitar_factura === true` en vez de truthy, porque el string "NO" de Sheets es truthy en JS.
+- **Mesa 0 no es falsy:** Usar `rowMesa != null && rowMesa !== ''` en vez de `rowMesa ?` para incluir mesa 0 como valor valido.
 - **Sin frameworks:** Vanilla JS reduce peso, complejidad y dependencias. Ideal para tablets con conexion limitada.
 - **Script vinculado:** Code.gs usa `getActiveSpreadsheet()` (no standalone) para acceso directo a la hoja.
 - **localStorage con prefijo:** `parche_` evita conflictos con otras apps en el mismo dominio.
 - **Metricas en %:** La escala 1-5 se convierte a porcentaje en el frontend (x20). El API sigue devolviendo valores 1-5 para no romper compatibilidad.
 - **por_mesa como distribucion:** El API devuelve arrays de conteos [rating1, rating2, ..., rating5] por categoria por mesa, permitiendo calcular "bajos" para cualquier umbral en el cliente sin nueva llamada al API.
+- **por_hora como promedios:** El API acumula y promedia ratings por hora del dia, permitiendo al frontend graficar patrones horarios.
 - **Email con try/catch:** La alerta no bloquea ni afecta el guardado de la calificacion si falla.
 - **Script Properties para email:** Las credenciales de correo no van en el codigo, van en propiedades del script (encriptadas por Google).
 
