@@ -366,10 +366,19 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
     // Filtro de sede
     if (codigoPv && codigoPv !== 'ALL' && rowCodigo !== codigoPv) continue;
 
-    // Filtro de fechas
+    // Fecha real del timestamp
     var rowDate = new Date(timestamp);
-    if (dateInicio && rowDate < dateInicio) continue;
-    if (dateFin && rowDate > dateFin) continue;
+
+    // Día de negocio: turno 16:00-01:00. Ratings entre 00:00-00:59 pertenecen al día anterior.
+    var HORA_CORTE = 1; // 01:00 AM
+    var bizDate = new Date(rowDate);
+    if (bizDate.getHours() < HORA_CORTE) {
+      bizDate.setDate(bizDate.getDate() - 1);
+    }
+
+    // Filtro de fechas usando día de negocio
+    if (dateInicio && bizDate < dateInicio) continue;
+    if (dateFin && bizDate > dateFin) continue;
 
     // Resumen general
     resumen.total++;
@@ -388,8 +397,8 @@ function getDashboard(codigoPv, fechaInicio, fechaFin) {
     porSedeMap[rowCodigo].infraestructura += infraestructura;
     porSedeMap[rowCodigo].musica += musica;
 
-    // Tendencia por día
-    var fechaStr = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    // Tendencia por día (usa bizDate para agrupar medianoche con el día de negocio correcto)
+    var fechaStr = Utilities.formatDate(bizDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
     if (!tendenciaMap[fechaStr]) {
       tendenciaMap[fechaStr] = { fecha: fechaStr, total: 0, servicio: 0, comida: 0, infraestructura: 0, musica: 0 };
     }

@@ -177,6 +177,7 @@ Dos paginas independientes:
 - **Fetch con credentials omit:** iOS Safari/Chrome (WebKit) bloquea fetch cross-origin por ITP. Se usa `credentials: 'omit'` en el fallback fetch.
 - **Strict boolean check:** `solicitar_factura === true` en vez de truthy, porque el string "NO" de Sheets es truthy en JS.
 - **Mesa 0 no es falsy:** Usar `rowMesa != null && rowMesa !== ''` en vez de `rowMesa ?` para incluir mesa 0 como valor valido.
+- **Dia de negocio:** Turno 16:00-01:00 cruza medianoche. `HORA_CORTE = 1` en `getDashboard()` — ratings entre 00:00-00:59 se ajustan al dia anterior (`bizDate`). Filtro de fechas y tendencia usan `bizDate`; `porHoraMap` usa hora real para no perder el patron horario.
 - **Sin frameworks:** Vanilla JS reduce peso, complejidad y dependencias. Ideal para tablets con conexion limitada.
 - **Script vinculado:** Code.gs usa `getActiveSpreadsheet()` (no standalone) para acceso directo a la hoja.
 - **localStorage con prefijo:** `parche_` evita conflictos con otras apps en el mismo dominio.
