@@ -139,6 +139,43 @@
         return localStorage.getItem('parche_codigo_pv');
     }
 
+    // ========================================
+    // Cola offline
+    // ========================================
+    var QUEUE_KEY = 'parche_offline_queue';
+
+    function getOfflineQueue() {
+        try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); }
+        catch (e) { return []; }
+    }
+
+    function saveToOfflineQueue(ratingData) {
+        var queue = getOfflineQueue();
+        queue.push(Object.assign({}, ratingData, { _savedAt: new Date().toISOString() }));
+        localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+        log('Guardado offline. Pendientes:', queue.length);
+    }
+
+    async function syncOfflineQueue() {
+        var queue = getOfflineQueue();
+        if (queue.length === 0) return;
+        log('Sincronizando cola offline:', queue.length, 'pendientes');
+        var remaining = [];
+        for (var i = 0; i < queue.length; i++) {
+            try {
+                await submitRating(queue[i]);
+                log('Sincronizado:', queue[i]._savedAt);
+            } catch (e) {
+                remaining = queue.slice(i); // conservar los que no se pudieron
+                break;
+            }
+        }
+        localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
+        if (remaining.length < queue.length) {
+            log('Cola sincronizada. Pendientes restantes:', remaining.length);
+        }
+    }
+
     function saveSede(codigoPv) {
         localStorage.setItem('parche_codigo_pv', codigoPv);
     }
@@ -369,6 +406,13 @@
     // ========================================
     // Submit
     // ========================================
+    function showThanks(isOffline) {
+        var offlineMsg = document.getElementById('thanks-offline-msg');
+        if (offlineMsg) offlineMsg.style.display = isOffline ? 'block' : 'none';
+        showScreen('thanks-screen');
+        startCountdown();
+    }
+
     async function handleSubmit() {
         if (!checkAllRated()) return;
 
@@ -383,26 +427,34 @@
             return;
         }
 
+        const ratingData = {
+            codigo_pv: state.codigoPv,
+            numero_factura: state.invoiceNumber,
+            numero_mesa: state.mesaNumber,
+            servicio: state.ratings.servicio,
+            comida: state.ratings.comida,
+            infraestructura: state.ratings.infraestructura,
+            musica: state.ratings.musica,
+            comentario: state.comment
+        };
+
+        // Sin red: guardar directo en cola, sin esperar timeout
+        if (!navigator.onLine) {
+            log('Sin conexión, guardando en cola offline');
+            saveToOfflineQueue(ratingData);
+            showThanks(true);
+            return;
+        }
+
         showScreen('submitting-screen');
 
         try {
-            await submitRating({
-                codigo_pv: state.codigoPv,
-                numero_factura: state.invoiceNumber,
-                numero_mesa: state.mesaNumber,
-                servicio: state.ratings.servicio,
-                comida: state.ratings.comida,
-                infraestructura: state.ratings.infraestructura,
-                musica: state.ratings.musica,
-                comentario: state.comment
-            });
-
-            showScreen('thanks-screen');
-            startCountdown();
+            await submitRating(ratingData);
+            showThanks(false);
         } catch (error) {
-            log('Submit error:', error);
-            alert('Error al enviar. Intenta de nuevo.');
-            showScreen('rating-screen');
+            log('Submit error, guardando en cola offline:', error);
+            saveToOfflineQueue(ratingData);
+            showThanks(true);
         }
     }
 
@@ -610,6 +662,12 @@
         log('Initializing...');
         bindEvents();
 
+        // Sincronizar cola offline cuando vuelva la conexión
+        window.addEventListener('online', function() {
+            log('Conexión restaurada, sincronizando cola offline...');
+            syncOfflineQueue().catch(function() {});
+        });
+
         const savedSede = getSavedSede();
 
         if (savedSede) {
@@ -619,6 +677,7 @@
             try {
                 state.config = await fetchConfig(savedSede);
                 updateBranding(state.config);
+                syncOfflineQueue().catch(function() {}); // intentar sync silencioso
                 goToRating();
             } catch (error) {
                 log('Init error:', error);
